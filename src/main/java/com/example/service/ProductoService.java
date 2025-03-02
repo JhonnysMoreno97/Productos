@@ -4,9 +4,9 @@ import com.example.model.Producto;
 import com.example.repository.ProductoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ProductoService {
@@ -14,28 +14,28 @@ public class ProductoService {
     @Autowired
     private ProductoRepository repository;
 
-    public List<Producto> listarTodos() {
+    public Flux<Producto> listarTodos() {
         return repository.findAll();
     }
 
-    public Optional<Producto> obtenerPorId(Long id) {
+    public Mono<Producto> obtenerPorId(Long id) {
         return repository.findById(id);
     }
 
-    public Producto guardar(Producto producto) {
+    public Mono<Producto> guardar(Producto producto) {
         return repository.save(producto);
     }
 
-    public Producto actualizar(Long id, Producto producto) {
-        if (repository.existsById(id)) {
-            producto.setId(id);
-            return repository.save(producto);
-        }
-        return null;
+    public Mono<Producto> actualizar(Long id, Producto producto) {
+        return repository.findById(id)
+                .flatMap(existingProducto -> {
+                    producto.setId(id);
+                    return repository.save(producto);
+                });
     }
 
-    public void eliminar(Long id) {
-        repository.deleteById(id);
+    public Mono<Void> eliminar(Long id) {
+        return repository.deleteById(id);
     }
 
 }
